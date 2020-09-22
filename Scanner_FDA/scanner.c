@@ -124,7 +124,7 @@ Token *readNumber(void)
 	int i = 0;
 	while (charCodes[currentChar] == CHAR_DIGIT)
 	{
-		if (i > MAX_NUMBER_LEN)
+		if (i > 10)
 		{
 			error(ERR_NUMBERTOOLONG, ln, cn);
 			return makeToken(TK_NONE, ln, cn);
