@@ -22,179 +22,485 @@ int state = 0;
 
 /***************************************************************/
 
-void skipBlank()
-{
-    while ((charCodes[currentChar] == CHAR_SPACE) && (currentChar != EOF))
-    {
-        readChar();
-    }
-}
-
-void skipComment()
-{
-    // currentChar == '*';
-    int state = 0; // inside comment
-
-    while (1)
-    {
-        readChar();
-        switch (state)
-        {
-        case 0:
-            if (currentChar == EOF)
-            {
-                error(ERR_ENDOFCOMMENT, lineNo, colNo);
-                return;
-            }
-            else if (charCodes[currentChar] == CHAR_TIMES)
-            {
-                state = 1;
-            }
-            break;
-        case 1:
-            if (currentChar == EOF)
-            {
-                error(ERR_ENDOFCOMMENT, lineNo, colNo);
-                return;
-            }
-            else if (charCodes[currentChar] == CHAR_RPAR)
-            {
-                state = 2;
-            }
-            else if (charCodes[currentChar] == CHAR_TIMES)
-            {
-                state = 1;
-            }
-            else
-            {
-                state = 0;
-            }
-            break;
-        case 2:
-            return;
-            break;
-        default:
-            break;
-        }
-    }
-}
-
-Token *readIdentKeyword(void)
-{
-    char ident[100];
-    int count = 0;
-    int ln = lineNo;
-    int cn = colNo;
-    while (charCodes[currentChar] == CHAR_DIGIT || charCodes[currentChar] == CHAR_LETTER)
-    {
-        ident[count] = currentChar;
-        ident[count + 1] = '\0';
-        readChar();
-        count++;
-    }
-
-    if (count > MAX_IDENT_LEN)
-    {
-        error(ERR_IDENTTOOLONG, ln, cn);
-        return makeToken(TK_NONE, ln, cn);
-    }
-    else
-    {
-        if (checkKeyword(ident) != TK_NONE)
-        {
-            return makeToken(checkKeyword(ident), ln, cn);
-        }
-        else
-        {
-            Token *token = makeToken(TK_IDENT, ln, cn);
-            int j = 0;
-            while (ident[j] != '\0')
-            {
-                token->string[j] = ident[j];
-                j++;
-            }
-            return token;
-        }
-    }
-}
-
-Token *readNumber(void)
-{
-    Token *token = makeToken(TK_NUMBER, lineNo, colNo);
-    int ln = lineNo;
-    int cn = colNo;
-    int i = 0;
-    while (charCodes[currentChar] == CHAR_DIGIT)
-    {
-        if (i > 10)
-        {
-            error(ERR_NUMBERTOOLONG, ln, cn);
-            return makeToken(TK_NONE, ln, cn);
-        }
-
-        if (i <= MAX_IDENT_LEN)
-        {
-            token->string[i] = currentChar;
-        }
-
-        i++;
-        readChar();
-    }
-    token->value = atoi(token->string);
-    return token;
-}
-
-Token *readConstChar(void)
-{
-    int ln = lineNo;
-    int cn = colNo;
-    readChar();
-    if (currentChar == EOF)
-    {
-        error(ERR_INVALIDCHARCONSTANT, ln, cn);
-        return makeToken(TK_EOF, lineNo, colNo);
-    }
-    else if (charCodes[currentChar] != CHAR_UNKNOWN)
-    {
-        char ch = currentChar;
-        Token *token = makeToken(TK_CHAR, lineNo, colNo);
-        token->string[0] = ch;
-        readChar();
-        if (charCodes[currentChar] == CHAR_SINGLEQUOTE)
-        {
-            readChar();
-            return token;
-        }
-        else
-        {
-            error(ERR_INVALIDCHARCONSTANT, ln, cn);
-            readChar();
-            return makeToken(TK_NONE, ln, cn);
-        }
-    }
-    else
-    {
-        error(ERR_INVALIDCHARCONSTANT, ln, cn);
-        readChar();
-        return makeToken(TK_NONE, ln, cn);
-    }
-}
-
 Token *getToken(void)
 {
     Token *token;
     int ln, cn;
 
-    if (currentChar == EOF)
-    {
-        return makeToken(TK_EOF, lineNo, colNo);
-    }
+    // Initialize DFA state:
+    state = 0;
+    ln = lineNo;
+    cn = colNo;
+    char ident[MAX_IDENT_LEN + 1];
+    char number[MAX_NUMBER_LEN + 1];
+    char constChar;
+    int i = 0;
 
-    // default:
-    // 	token = makeToken(TK_NONE, lineNo, colNo);
-    // 	error(ERR_INVALIDSYMBOL, lineNo, colNo);
-    // 	readChar();
-    // 	return token;
+    // Run DFA
+    while (1)
+    {
+        switch (state)
+        {
+        case 0:
+            if (currentChar == EOF)
+            {
+                state = 37;
+                break;
+            }
+            switch (charCodes[currentChar])
+            {
+            case CHAR_SPACE:
+                state = 1;
+                break;
+
+            case CHAR_LPAR:
+                state = 2;
+                break;
+
+            case CHAR_LETTER:
+                state = 8;
+                break;
+
+            case CHAR_DIGIT:
+                state = 10;
+                break;
+
+            case CHAR_PLUS:
+                state = 12;
+                break;
+
+            case CHAR_MINUS:
+                state = 13;
+                break;
+
+            case CHAR_TIMES:
+                state = 14;
+                break;
+
+            case CHAR_SLASH:
+                state = 15;
+                break;
+
+            case CHAR_EQ:
+                state = 16;
+                break;
+
+            case CHAR_COMMA:
+                state = 17;
+                break;
+
+            case CHAR_SEMICOLON:
+                state = 18;
+                break;
+
+            case CHAR_PERIOD:
+                state = 19;
+                break;
+
+            case CHAR_GT:
+                state = 22;
+                break;
+
+            case CHAR_LT:
+                state = 25;
+                break;
+
+            case CHAR_EXCLAIMATION:
+                state = 28;
+                break;
+
+            case CHAR_COLON:
+                state = 31;
+                break;
+
+            case CHAR_SINGLEQUOTE:
+                state = 34;
+                break;
+
+            case CHAR_RPAR:
+                state = 39;
+                break;
+
+            default:
+                state = 38;
+                break;
+            }
+            break;
+        case 1:
+            readChar();
+            if ((currentChar != EOF) && (charCodes[currentChar] == CHAR_SPACE))
+            {
+                state = 1;
+            }
+            else
+            {
+                return getToken();
+            }
+            break;
+
+        case 2:
+            readChar();
+            switch (charCodes[currentChar])
+            {
+            case CHAR_TIMES:
+                state = 3;
+                break;
+
+            case CHAR_PERIOD:
+                state = 6;
+                break;
+
+            default:
+                state = 7;
+                break;
+            }
+            break;
+
+        case 3:
+            readChar();
+            if (charCodes[currentChar] == CHAR_TIMES)
+            {
+                state = 4;
+            }
+            else if (currentChar == EOF)
+            {
+                state = 40;
+            }
+            else
+            {
+                state = 3;
+            }
+            break;
+
+        case 4:
+            readChar();
+            if (charCodes[currentChar] == CHAR_TIMES)
+            {
+                state = 4;
+            }
+            else if (currentChar == EOF)
+            {
+                state = 40;
+            }
+            else if (charCodes[currentChar] == CHAR_RPAR)
+            {
+                state = 5;
+            }
+            else
+            {
+                state = 3;
+            }
+            break;
+
+        case 5:
+            readChar();
+            return getToken();
+            break;
+
+        case 6:
+            readChar();
+            return makeToken(SB_LSEL, ln, cn);
+            break;
+
+        case 7:
+            return makeToken(SB_LPAR, ln, cn);
+            break;
+
+        case 8:
+            ident[i] = currentChar;
+            ++i;
+            readChar();
+            switch (charCodes[currentChar])
+            {
+            case CHAR_LETTER:
+                state = 8;
+                break;
+
+            case CHAR_DIGIT:
+                state = 8;
+                break;
+
+            default:
+                state = 9;
+                break;
+            }
+            break;
+
+        case 9:
+            if (i > MAX_IDENT_LEN)
+            {
+                error(ERR_IDENTTOOLONG, ln, cn);
+            }
+            else
+            {
+                if (checkKeyword(ident) == TK_NONE)
+                {
+                    token = makeToken(TK_IDENT, ln, cn);
+                    for (int j = 0; j < i; j++)
+                    {
+                        token->string[j] = ident[j];
+                    }
+                    return token;
+                }
+                else
+                {
+                    return makeToken(checkKeyword(ident), ln, cn);
+                }
+            }
+            break;
+
+        case 10:
+            number[i] = currentChar;
+            i++;
+            readChar();
+            switch (charCodes[currentChar])
+            {
+            case CHAR_DIGIT:
+                state = 10;
+                break;
+
+            default:
+                state = 11;
+                break;
+            }
+            break;
+
+        case 11:
+            token = makeToken(TK_NUMBER, ln, cn);
+            if (i > MAX_NUMBER_LEN)
+            {
+                error(ERR_NUMBERTOOLONG, ln, cn);
+            }
+            else
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    token->string[j] = number[j];
+                }
+                token->value = atoi(token->string);
+                return token;
+            }
+            break;
+
+        case 12:
+            readChar();
+            return makeToken(SB_PLUS, ln, cn);
+            break;
+
+        case 13:
+            readChar();
+            return makeToken(SB_MINUS, ln, cn);
+            break;
+
+        case 14:
+            readChar();
+            return makeToken(SB_TIMES, ln, cn);
+            break;
+
+        case 15:
+            readChar();
+            return makeToken(SB_SLASH, ln, cn);
+            break;
+
+        case 16:
+            readChar();
+            return makeToken(SB_EQ, ln, cn);
+            break;
+
+        case 17:
+            readChar();
+            return makeToken(SB_COMMA, ln, cn);
+            break;
+
+        case 18:
+            readChar();
+            return makeToken(SB_SEMICOLON, ln, cn);
+            break;
+
+        case 19:
+            readChar();
+            switch (charCodes[currentChar])
+            {
+            case CHAR_RPAR:
+                state = 20;
+                break;
+
+            default:
+                state = 21;
+                break;
+            }
+            break;
+
+        case 20:
+            readChar();
+            return makeToken(SB_RSEL, ln, cn);
+            break;
+
+        case 21:
+            return makeToken(SB_PERIOD, ln, cn);
+            break;
+
+        case 22:
+            readChar();
+            switch (charCodes[currentChar])
+            {
+            case CHAR_EQ:
+                state = 23;
+                break;
+
+            default:
+                state = 24;
+                break;
+            }
+            break;
+
+        case 23:
+            readChar();
+            return makeToken(SB_GE, ln, cn);
+            break;
+
+        case 24:
+            return makeToken(SB_GT, ln, cn);
+            break;
+
+        case 25:
+            readChar();
+            switch (charCodes[currentChar])
+            {
+            case CHAR_EQ:
+                state = 26;
+                break;
+
+            default:
+                state = 27;
+                break;
+            }
+            break;
+
+        case 26:
+            readChar();
+            return makeToken(SB_LE, ln, cn);
+            break;
+
+        case 27:
+            return makeToken(SB_LT, ln, cn);
+            break;
+
+        case 28:
+            readChar();
+            switch (charCodes[currentChar])
+            {
+            case CHAR_EQ:
+                state = 29;
+                break;
+
+            default:
+                state = 30;
+                break;
+            }
+            break;
+
+        case 29:
+            readChar();
+            return makeToken(SB_NEQ, ln, cn);
+            break;
+
+        case 30:
+            error(ERR_INVALIDSYMBOL, ln, cn);
+            break;
+
+        case 31:
+            readChar();
+            switch (charCodes[currentChar])
+            {
+            case CHAR_EQ:
+                state = 32;
+                break;
+
+            default:
+                state = 33;
+                break;
+            }
+            break;
+
+        case 32:
+            readChar();
+            return makeToken(SB_ASSIGN, ln, cn);
+            break;
+
+        case 33:
+            return makeToken(SB_COLON, ln, cn);
+            break;
+
+        case 34:
+            readChar();
+            if (currentChar == EOF || charCodes[currentChar] == CHAR_UNKNOWN)
+            {
+                error(ERR_INVALIDCHARCONSTANT, ln, cn);
+            }
+            else if (charCodes[currentChar] == CHAR_SINGLEQUOTE)
+            {
+                state = 36;
+            }
+            else
+            {
+                state = 35;
+            }
+            break;
+
+        case 35:
+            constChar = currentChar;
+            readChar();
+            if (currentChar == EOF || charCodes[currentChar] == CHAR_UNKNOWN)
+            {
+                error(ERR_INVALIDCHARCONSTANT, ln, cn);
+            }
+            else if (charCodes[currentChar] == CHAR_SINGLEQUOTE)
+            {
+                state = 36;
+            }
+            else
+            {
+                error(ERR_INVALIDCHARCONSTANT, ln, cn);
+            }
+            break;
+
+        case 36:
+            readChar();
+            token = makeToken(TK_CHAR, ln, cn);
+            if (constChar)
+            {
+                token->string[0] = constChar;
+            }
+            return token;
+            break;
+
+        case 37:
+            readChar();
+            return makeToken(TK_EOF, ln, cn);
+            break;
+
+        case 38:
+            error(ERR_INVALIDSYMBOL, ln, cn);
+            break;
+
+        case 39:
+            readChar();
+            return makeToken(SB_RPAR, ln, cn);
+            break;
+
+        case 40:
+            error(ERR_INVALIDSYMBOL, ln, cn);
+            break;
+
+        default:
+            token = makeToken(TK_NONE, lineNo, colNo);
+            error(ERR_INVALIDSYMBOL, lineNo, colNo);
+            readChar();
+            return token;
+            break;
+        }
+    }
 }
 
 /******************************************************************/
