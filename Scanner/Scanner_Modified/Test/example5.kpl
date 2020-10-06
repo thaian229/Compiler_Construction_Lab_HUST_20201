@@ -1,0 +1,4 @@
+program Example1; (* Example 5 *)
+var thisWillBeShort : integer;
+begin
+end. (* Example 5 *)

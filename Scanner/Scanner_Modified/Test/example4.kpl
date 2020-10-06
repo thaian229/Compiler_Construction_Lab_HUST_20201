@@ -1,0 +1,4 @@
+Program Example1; (* Example 4 *)
+Var thisWillBeTooLongYouKnow : integer;
+Begin
+End. (* Example 4 *)
