@@ -143,7 +143,22 @@ void compileVarDecl(void)
 void compileSubDecls(void) // Have Epsilon
 {
     assert("Parsing subtoutines ....");
-    // TODO
+    while (lookAhead->tokenType == KW_FUNCTION || lookAhead->tokenType == KW_PROCEDURE)
+    {
+        switch (lookAhead->tokenType)
+        {
+        case KW_FUNCTION:
+            compileFuncDecl();
+            break;
+
+        case KW_PROCEDURE:
+            compileProcDecl();
+            break;
+
+        default:
+            break;
+        }
+    }
     assert("Subtoutines parsed ....");
 }
 
@@ -291,9 +306,15 @@ void compileBasicType(void)
     }
 }
 
-void compileParams(void)    // Have Epsilon
+void compileParams(void) // Have Epsilon
 {
-    // TODO
+    if (lookAhead->tokenType == SB_LPAR)
+    {
+        eat(SB_LPAR);
+        compileParam();
+        compileParams2();
+        eat(SB_RPAR);
+    }
 }
 
 void compileParams2(void)
@@ -393,7 +414,7 @@ void compileCallSt(void)
 {
     assert("Parsing a call statement ....");
     eat(KW_CALL);
-    eat(TK_IDENT);  // ProcedureIdent
+    eat(TK_IDENT); // ProcedureIdent
     compileArguments();
     assert("Call statement parsed ....");
 }
@@ -431,7 +452,7 @@ void compileWhileSt(void)
     eat(KW_WHILE);
     compileCondition();
     eat(KW_DO);
-    compileStatement;
+    compileStatement();
     assert("While statement pased ....");
 }
 
@@ -462,7 +483,6 @@ void compileArguments(void)
 
 void compileArguments2(void)
 {
-    // TODO
     while (lookAhead->tokenType == SB_COMMA)
     {
         eat(SB_COMMA);
@@ -525,7 +545,7 @@ void compileExpression(void)
         eat(SB_PLUS);
         compileExpression2();
         break;
-    
+
     case SB_MINUS:
         eat(SB_MINUS);
         compileExpression2();
@@ -544,9 +564,8 @@ void compileExpression2(void)
     compileExpression3();
 }
 
-void compileExpression3(void)   // Have Epsilon
+void compileExpression3(void) // Have Epsilon
 {
-    // TODO
     switch (lookAhead->tokenType)
     {
     case SB_PLUS:
@@ -554,7 +573,7 @@ void compileExpression3(void)   // Have Epsilon
         compileTerm();
         compileExpression3();
         break;
-    
+
     case SB_MINUS:
         eat(SB_MINUS);
         compileTerm();
@@ -574,12 +593,60 @@ void compileTerm(void)
 
 void compileTerm2(void) // Have Epsilon
 {
-    // TODO
+    while (lookAhead->tokenType == SB_TIMES || lookAhead->tokenType == SB_SLASH)
+    {
+        switch (lookAhead->tokenType)
+        {
+        case SB_TIMES:
+            eat(SB_TIMES);
+            compileFactor();
+            break;
+
+        case SB_SLASH:
+            eat(SB_SLASH);
+            compileFactor();
+            break;
+
+        default:
+            break;
+        }
+    }
 }
 
 void compileFactor(void)
 {
-    // TODO
+    // assert("compile Factor...");
+    switch (lookAhead->tokenType)
+    {
+    case TK_NUMBER:
+        eat(TK_NUMBER);
+        break;
+
+    case TK_CHAR:
+        eat(TK_CHAR);
+        break;
+    case TK_IDENT:
+        eat(TK_IDENT);
+        switch (lookAhead->tokenType)
+        {
+        case SB_LSEL:
+            compileIndexes();
+            break;
+
+            // case SB_LPAR:
+            //     compileArguments();
+            //     break;
+
+        default:
+            compileArguments();
+            break;
+        }
+        break;
+    default:
+        error(ERR_INVALIDSTATEMENT, lookAhead->lineNo, lookAhead->colNo);
+        break;
+    }
+    // assert("finished Factor.");
 }
 
 void compileIndexes(void)

@@ -35,7 +35,7 @@ BEGIN
             IF A(.I.) > MAXTMP THEN
                 MAXTMP := A(.I.);
             I := I + 1;
-        END
+        END;
     FINDINGMAX := MAXTMP;
 END;
 
