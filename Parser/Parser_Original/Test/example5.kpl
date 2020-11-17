@@ -1,0 +1,47 @@
+PROGRAM FindMax; (*Example 5: finding the maximum number in an array of integers*)
+TYPE T = INTEGER;
+VAR A : ARRAY(.100.) OF T;
+    MAX : INTEGER;
+    N : INTEGER;
+    CH : CHAR;
+
+PROCEDURE INPUT;
+VAR I : INTEGER;
+    TMP : INTEGER;
+BEGIN
+    N := READI;
+    FOR I := 1 TO N DO
+        A(.I.) := READI;
+END;
+
+PROCEDURE OUTPUT;
+BEGIN
+    CALL WRITEI(MAX);
+    FOR I := 1 TO N DO
+        BEGIN
+            IF A(.I.) = MAX THEN
+                CALL WRITEI(I)
+        END
+END;
+
+FUNCTION FINDINGMAX : INTEGER;
+VAR I : INTEGER;
+    MAXTMP : INTEGER;
+BEGIN
+    MAXTMP := A(.1.);
+    I := 2;
+    WHILE I <= N DO
+        BEGIN
+            IF A(.I.) > MAXTMP THEN
+                MAXTMP := A(.I.);
+            I := I + 1;
+        END;
+    FINDINGMAX := MAXTMP;
+END;
+
+(*HERE IS MAIN*)
+BEGIN
+    CALL INPUT;
+    MAX := FINDINGMAX;
+    CALL OUTPUT;
+END. (*DONE*)
