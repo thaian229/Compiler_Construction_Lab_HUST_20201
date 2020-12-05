@@ -16,7 +16,7 @@ enum TypeClass
     TP_ARRAY
 };
 
-enum ObjectKind
+enum ObjectKind // what kind of Indent is that object
 {
     OBJ_CONSTANT,
     OBJ_VARIABLE,
@@ -27,7 +27,7 @@ enum ObjectKind
     OBJ_PROGRAM
 };
 
-enum ParamKind
+enum ParamKind  // Kind of param: Pass by value or pass by reference
 {
     PARAM_VALUE,
     PARAM_REFERENCE
@@ -136,7 +136,7 @@ typedef struct ObjectNode_ ObjectNode;
 
 struct Scope_
 {
-    ObjectNode *objList;
+    ObjectNode *objList; // contains all objects in that scope
     Object *owner;
     struct Scope_ *outer;
 };
@@ -147,7 +147,7 @@ struct SymTab_
 {
     Object *program;
     Scope *currentScope;
-    ObjectNode *globalObjectList;
+    ObjectNode *globalObjectList;   // contains all globals objects (indent token)
 };
 
 typedef struct SymTab_ SymTab;
