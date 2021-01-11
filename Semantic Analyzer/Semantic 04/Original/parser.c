@@ -555,6 +555,7 @@ void compileForSt(void)
 
     // check if the identifier is a variable
     var = checkDeclaredVariable(currentToken->string);
+    checkIntType(var->varAttrs->type);
 
     eat(SB_ASSIGN);
     type = compileExpression();
@@ -596,7 +597,7 @@ void compileArguments(ObjectNode *paramList)
     {
     case SB_LPAR:
         eat(SB_LPAR);
-        if (node == NULL)
+        if (node == NULL)   // Redandunt
             error(ERR_PARAMETERS_ARGUMENTS_INCONSISTENCY, currentToken->lineNo, currentToken->colNo);
         compileArgument(node->object);
         node = node->next;
@@ -604,13 +605,13 @@ void compileArguments(ObjectNode *paramList)
         while (lookAhead->tokenType == SB_COMMA)
         {
             eat(SB_COMMA);
-            if (node == NULL)
+            if (node == NULL)   // Redandunt
                 error(ERR_PARAMETERS_ARGUMENTS_INCONSISTENCY, currentToken->lineNo, currentToken->colNo);
             compileArgument(node->object);
             node = node->next;
         }
 
-        if (node != NULL)
+        if (node != NULL)   // Lacking
             error(ERR_PARAMETERS_ARGUMENTS_INCONSISTENCY, currentToken->lineNo, currentToken->colNo);
 
         eat(SB_RPAR);
@@ -890,11 +891,11 @@ Type *compileIndexes(Type *arrayType)
         eat(SB_LSEL);
         type = compileExpression();
         checkIntType(type);
-        checkArrayType(arrayType);
+        checkArrayType(arrayType);  // Error here if Redandunt
         arrayType = arrayType->elementType;
         eat(SB_RSEL);
     }
-    checkBasicType(arrayType);
+    checkBasicType(arrayType);  // Lacking dimension
     return arrayType;
 }
 

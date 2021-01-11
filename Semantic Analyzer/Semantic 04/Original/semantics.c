@@ -12,14 +12,14 @@
 extern SymTab *symtab;
 extern Token *currentToken;
 
-Object *lookupObject(char *name)
+Object *lookupObject(char *name)    // Find object in current scope and all of its outer scopes, also find it in global scope
 {
     Scope *scope = symtab->currentScope;
     Object *obj;
 
     while (scope != NULL)
     {
-        obj = findObject(scope->objList, name);
+        obj = findObject(scope->objList, name); // find object in 1 scope.
         if (obj != NULL)
             return obj;
         scope = scope->outer;
