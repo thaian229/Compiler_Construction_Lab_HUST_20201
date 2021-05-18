@@ -1,0 +1,7 @@
+Program Example10;
+   
+Var n : Integer;
+
+Begin
+  n := - 7;
+End.

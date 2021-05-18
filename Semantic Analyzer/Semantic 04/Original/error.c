@@ -24,7 +24,7 @@ struct ErrorMessage errors[29] = {
     {ERR_INVALID_IDENT, "An identifier expected."},
     {ERR_INVALID_CONSTANT, "A constant expected."},
     {ERR_INVALID_TYPE, "A type expected."},
-    {ERR_INVALID_BASICTYPE, "A basic type expected."},
+    {ERR_INVALID_BASICTYPE, "Invalid basic type! A basic type expected."},
     {ERR_INVALID_VARIABLE, "A variable expected."},
     {ERR_INVALID_FUNCTION, "A function identifier expected."},
     {ERR_INVALID_PROCEDURE, "A procedure identifier expected."},

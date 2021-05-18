@@ -581,7 +581,7 @@ void compileArgument(Object *param)
         type = compileExpression();
         checkTypeEquality(type, param->paramAttrs->type);
     }
-    else
+    else    // reference must be LValue:
     {
         type = compileLValue();
         checkTypeEquality(type, param->paramAttrs->type);
